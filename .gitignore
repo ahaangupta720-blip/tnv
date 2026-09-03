@@ -1,0 +1,6 @@
+notes/
+__pycache__/
+*.pyc
+.env
+.env.*
+vault.enc
