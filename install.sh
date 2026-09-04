@@ -7,46 +7,43 @@ echo "        TNV Installer"
 echo "================================="
 echo
 
-# Check Python
+echo "[1/5] Checking Python..."
+
 if ! command -v python3 >/dev/null 2>&1; then
     echo "Python3 is not installed."
-    echo "Please install Python3 first."
+    echo "Install it with:"
+    echo "  sudo apt install python3 python3-venv"
     exit 1
 fi
 
-echo "[1/5] Installing Python dependencies..."
+echo "[2/5] Creating Python environment..."
 
-python3 -m pip install --user cryptography
+python3 -m venv "$HOME/.tnv/venv"
 
-echo "[2/5] Creating directories..."
+echo "[3/5] Installing Python dependencies..."
+
+"$HOME/.tnv/venv/bin/pip" install --upgrade pip
+"$HOME/.tnv/venv/bin/pip" install cryptography
+
+echo "[4/5] Creating directories..."
 
 mkdir -p "$HOME/.tnv/notes"
 
-echo "[3/5] Installing commands..."
+echo "[5/5] Installing commands..."
 
 sudo cp password.py /usr/local/bin/password
 sudo cp tnv.py /usr/local/bin/note
 
+sudo sed -i "1c\\#!$HOME/.tnv/venv/bin/python" /usr/local/bin/password
+sudo sed -i "1c\\#!$HOME/.tnv/venv/bin/python" /usr/local/bin/note
+
 sudo chmod +x /usr/local/bin/password
 sudo chmod +x /usr/local/bin/note
 
-echo "[4/5] Checking installation..."
-
-if command -v password >/dev/null 2>&1; then
-    echo "✓ password installed"
-else
-    echo "✗ password installation failed"
-    exit 1
-fi
-
-if command -v note >/dev/null 2>&1; then
-    echo "✓ note installed"
-else
-    echo "✗ note installation failed"
-    exit 1
-fi
-
-echo "[5/5] Installation complete!"
+echo
+echo "================================="
+echo "      TNV Installation Done!"
+echo "================================="
 echo
 echo "You can now use:"
 echo
@@ -58,6 +55,3 @@ echo "  password add github"
 echo "  password list"
 echo "  password generate"
 echo
-echo "================================="
-echo "        Installation Done!"
-echo "================================="
