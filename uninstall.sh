@@ -6,6 +6,7 @@ echo "================================="
 echo "        TNV Uninstaller"
 echo "================================="
 echo
+
 echo "This will remove:"
 echo "  - note command"
 echo "  - password command"
@@ -45,3 +46,5 @@ echo "Your notes and password vault were NOT deleted."
 echo "They remain in:"
 echo
 echo "  ~/.tnv/"
+echo
+echo "================================="
