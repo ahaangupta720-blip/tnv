@@ -11,14 +11,16 @@ echo "[1/5] Checking Python..."
 
 if ! command -v python3 >/dev/null 2>&1; then
     echo "Python3 is not installed."
-    echo "Install it with:"
-    echo "  sudo apt install python3 python3-venv"
     exit 1
 fi
 
 echo "[2/5] Creating Python environment..."
 
-python3 -m venv "$HOME/.tnv/venv"
+mkdir -p "$HOME/.tnv"
+
+if [ ! -d "$HOME/.tnv/venv" ]; then
+    python3 -m venv "$HOME/.tnv/venv"
+fi
 
 echo "[3/5] Installing Python dependencies..."
 
@@ -31,27 +33,47 @@ mkdir -p "$HOME/.tnv/notes"
 
 echo "[5/5] Installing commands..."
 
-sudo cp password.py /usr/local/bin/password
-sudo cp tnv.py /usr/local/bin/note
+if [ -n "$PREFIX" ] && [ -d "$PREFIX/bin" ]; then
+    echo "Termux detected."
 
-sudo sed -i "1c\\#!$HOME/.tnv/venv/bin/python" /usr/local/bin/password
-sudo sed -i "1c\\#!$HOME/.tnv/venv/bin/python" /usr/local/bin/note
+    INSTALL_DIR="$PREFIX/bin"
 
-sudo chmod +x /usr/local/bin/password
-sudo chmod +x /usr/local/bin/note
+    cp "$OLDPWD/password.py" "$INSTALL_DIR/password"
+    cp "$OLDPWD/tnv.py" "$INSTALL_DIR/note"
+
+    chmod +x "$INSTALL_DIR/password"
+    chmod +x "$INSTALL_DIR/note"
+
+    sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$INSTALL_DIR/password"
+    sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$INSTALL_DIR/note"
+
+else
+    echo "Linux/WSL detected."
+
+    INSTALL_DIR="/usr/local/bin"
+
+    sudo cp "$OLDPWD/password.py" "$INSTALL_DIR/password"
+    sudo cp "$OLDPWD/tnv.py" "$INSTALL_DIR/note"
+
+    sudo chmod +x "$INSTALL_DIR/password"
+    sudo chmod +x "$INSTALL_DIR/note"
+
+    sudo sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$INSTALL_DIR/password"
+    sudo sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$INSTALL_DIR/note"
+fi
 
 echo
 echo "================================="
 echo "      TNV Installation Done!"
 echo "================================="
 echo
-echo "You can now use:"
+echo "Commands installed:"
 echo
-echo "  note list"
-echo "  note add \"My Note\""
+echo "  note"
+echo "  password"
 echo
-echo "  password init"
-echo "  password add github"
-echo "  password list"
-echo "  password generate"
+echo "Try:"
+echo
+echo "  note help"
+echo "  password help"
 echo
