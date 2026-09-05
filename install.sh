@@ -14,7 +14,18 @@ if ! command -v python3 >/dev/null 2>&1; then
     exit 1
 fi
 
-echo "[2/5] Creating Python environment..."
+echo "[2/5] Detecting environment..."
+
+# Detect Termux even when running inside proot
+if [ -d "/data/data/com.termux/files/usr" ]; then
+    echo "Termux/proot detected."
+    INSTALL_DIR="/data/data/com.termux/files/usr/bin"
+else
+    echo "Linux/WSL detected."
+    INSTALL_DIR="/usr/local/bin"
+fi
+
+echo "[3/5] Creating Python environment..."
 
 mkdir -p "$HOME/.tnv"
 
@@ -22,36 +33,16 @@ if [ ! -d "$HOME/.tnv/venv" ]; then
     python3 -m venv "$HOME/.tnv/venv"
 fi
 
-echo "[3/5] Installing Python dependencies..."
+echo "[4/5] Installing Python dependencies..."
 
 "$HOME/.tnv/venv/bin/pip" install --upgrade pip
 "$HOME/.tnv/venv/bin/pip" install cryptography
 
-echo "[4/5] Creating directories..."
+echo "[5/5] Installing commands..."
 
 mkdir -p "$HOME/.tnv/notes"
 
-echo "[5/5] Installing commands..."
-
-if [ -n "$PREFIX" ] && [ -d "$PREFIX/bin" ]; then
-    echo "Termux detected."
-
-    INSTALL_DIR="$PREFIX/bin"
-
-    cp "$OLDPWD/password.py" "$INSTALL_DIR/password"
-    cp "$OLDPWD/tnv.py" "$INSTALL_DIR/note"
-
-    chmod +x "$INSTALL_DIR/password"
-    chmod +x "$INSTALL_DIR/note"
-
-    sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$INSTALL_DIR/password"
-    sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$INSTALL_DIR/note"
-
-else
-    echo "Linux/WSL detected."
-
-    INSTALL_DIR="/usr/local/bin"
-
+if [ "$INSTALL_DIR" = "/usr/local/bin" ]; then
     sudo cp "$OLDPWD/password.py" "$INSTALL_DIR/password"
     sudo cp "$OLDPWD/tnv.py" "$INSTALL_DIR/note"
 
@@ -60,6 +51,15 @@ else
 
     sudo sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$INSTALL_DIR/password"
     sudo sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$INSTALL_DIR/note"
+else
+    cp "$OLDPWD/password.py" "$INSTALL_DIR/password"
+    cp "$OLDPWD/tnv.py" "$INSTALL_DIR/note"
+
+    chmod +x "$INSTALL_DIR/password"
+    chmod +x "$INSTALL_DIR/note"
+
+    sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$INSTALL_DIR/password"
+    sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$INSTALL_DIR/note"
 fi
 
 echo
