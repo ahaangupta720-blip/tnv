@@ -16,9 +16,11 @@ fi
 
 echo "[2/5] Detecting environment..."
 
-# Detect Termux even when running inside proot
-if [ -d "/data/data/com.termux/files/usr" ]; then
-    echo "Termux/proot detected."
+if [ -n "$PREFIX" ] && [ -d "$PREFIX/bin" ]; then
+    echo "Termux detected."
+    INSTALL_DIR="$PREFIX/bin"
+elif [ -d "/data/data/com.termux/files/usr/bin" ]; then
+    echo "Termux detected."
     INSTALL_DIR="/data/data/com.termux/files/usr/bin"
 else
     echo "Linux/WSL detected."
@@ -42,25 +44,29 @@ echo "[5/5] Installing commands..."
 
 mkdir -p "$HOME/.tnv/notes"
 
+TEMP_DIR="$(mktemp -d)"
+
+curl -fsSL https://raw.githubusercontent.com/ahaangupta720-blip/tnv/main/password.py \
+    -o "$TEMP_DIR/password"
+
+curl -fsSL https://raw.githubusercontent.com/ahaangupta720-blip/tnv/main/tnv.py \
+    -o "$TEMP_DIR/note"
+
+sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$TEMP_DIR/password"
+sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$TEMP_DIR/note"
+
+chmod +x "$TEMP_DIR/password"
+chmod +x "$TEMP_DIR/note"
+
 if [ "$INSTALL_DIR" = "/usr/local/bin" ]; then
-    sudo cp "$OLDPWD/password.py" "$INSTALL_DIR/password"
-    sudo cp "$OLDPWD/tnv.py" "$INSTALL_DIR/note"
-
-    sudo chmod +x "$INSTALL_DIR/password"
-    sudo chmod +x "$INSTALL_DIR/note"
-
-    sudo sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$INSTALL_DIR/password"
-    sudo sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$INSTALL_DIR/note"
+    sudo cp "$TEMP_DIR/password" "$INSTALL_DIR/password"
+    sudo cp "$TEMP_DIR/note" "$INSTALL_DIR/note"
 else
-    cp "$OLDPWD/password.py" "$INSTALL_DIR/password"
-    cp "$OLDPWD/tnv.py" "$INSTALL_DIR/note"
-
-    chmod +x "$INSTALL_DIR/password"
-    chmod +x "$INSTALL_DIR/note"
-
-    sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$INSTALL_DIR/password"
-    sed -i "1c\\#!$HOME/.tnv/venv/bin/python" "$INSTALL_DIR/note"
+    cp "$TEMP_DIR/password" "$INSTALL_DIR/password"
+    cp "$TEMP_DIR/note" "$INSTALL_DIR/note"
 fi
+
+rm -rf "$TEMP_DIR"
 
 echo
 echo "================================="
